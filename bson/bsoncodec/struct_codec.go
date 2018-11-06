@@ -97,6 +97,12 @@ func (sc *StructCodec) EncodeValue(r EncodeContext, vw bsonrw.ValueWriter, i int
 
 		ectx := EncodeContext{Registry: r.Registry, MinSize: desc.minSize}
 
+		if rv.Kind() == reflect.Ptr && rv.IsNil() {
+			err = encoder.EncodeValue(ectx, vw2, nil)
+			if err != nil {
+				return err
+			}
+		} else
 		// FIXME: find a better way to check if rv is pointer to document
 		// DocumentEncodeValue only process *bson.Document, **bson.Document
 		if rv.Kind() == reflect.Ptr && rv.Type().Elem().Name() != "Document" {
