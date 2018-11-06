@@ -103,7 +103,15 @@ func (sc *StructCodec) EncodeValue(r EncodeContext, vw bsonrw.ValueWriter, i int
 		}
 
 		ectx := EncodeContext{Registry: r.Registry, MinSize: desc.minSize}
-		err = encoder.EncodeValue(ectx, vw2, rv.Interface())
+
+		var elInst interface{}
+		if rv.IsNil() {
+			elInst = nil
+		} else {
+			elInst = rv.Interface()
+		}
+
+		err = encoder.EncodeValue(ectx, vw2, elInst)
 		if err != nil {
 			return err
 		}
@@ -228,6 +236,10 @@ func (sc *StructCodec) isZero(i interface{}) bool {
 
 	// check the value validity
 	if !v.IsValid() {
+		return true
+	}
+
+	if v.Kind() == reflect.Ptr && v.IsNil() {
 		return true
 	}
 
