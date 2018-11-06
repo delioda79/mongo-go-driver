@@ -86,7 +86,7 @@ func (sc *StructCodec) EncodeValue(r EncodeContext, vw bsonrw.ValueWriter, i int
 		if iz, ok := encoder.(CodecZeroer); ok {
 			iszero = iz.IsTypeZero
 		}
-		if (rv.Kind() == reflect.Ptr || desc.omitEmpty) && iszero(rv.Interface()) {
+		if desc.omitEmpty && iszero(rv.Interface()) {
 			continue
 		}
 
