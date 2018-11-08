@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/mongodb/mongo-go-driver/bson/bsonrw"
+	"github.com/mongodb/mongo-go-driver/bson/objectid"
 )
 
 var defaultStructCodec = &StructCodec{
@@ -89,6 +90,9 @@ func (sc *StructCodec) EncodeValue(r EncodeContext, vw bsonrw.ValueWriter, i int
 		if desc.omitEmpty && iszero(rv.Interface()) {
 			continue
 		}
+		if _, isObjID := rv.Interface().(*objectid.ObjectID); isObjID && rv.IsNil() {
+			continue
+		}
 
 		vw2, err := dw.WriteDocumentElement(desc.name)
 		if err != nil {
@@ -98,10 +102,7 @@ func (sc *StructCodec) EncodeValue(r EncodeContext, vw bsonrw.ValueWriter, i int
 		ectx := EncodeContext{Registry: r.Registry, MinSize: desc.minSize}
 
 		if rv.Kind() == reflect.Ptr && rv.IsNil() {
-			err = encoder.EncodeValue(ectx, vw2, nil)
-			if err != nil {
-				return err
-			}
+			vw2.WriteNull()
 		} else
 		// FIXME: find a better way to check if rv is pointer to document
 		// DocumentEncodeValue only process *bson.Document, **bson.Document
@@ -110,17 +111,6 @@ func (sc *StructCodec) EncodeValue(r EncodeContext, vw bsonrw.ValueWriter, i int
 		} else {
 			err = encoder.EncodeValue(ectx, vw2, rv.Interface())
 		}
-		// var elInst interface{}
-		// if rv.IsNil() {
-		// 	elInst = nil
-		// } else {
-		// 	elInst = rv.Interface()
-		// }
-
-		// err = encoder.EncodeValue(ectx, vw2, elInst)
-		// if err != nil {
-		// 	return err
-		// }
 	}
 
 	if sd.inlineMap >= 0 {
