@@ -935,6 +935,10 @@ func (dvd DefaultValueDecoders) URLDecodeValue(dc DecodeContext, vr bsonrw.Value
 
 // TimeDecodeValue is the ValueDecoderFunc for time.Time.
 func (dvd DefaultValueDecoders) TimeDecodeValue(dc DecodeContext, vr bsonrw.ValueReader, i interface{}) error {
+	if vr.Type() == bsontype.Null {
+		vr.ReadNull()
+		return nil
+	}
 	if vr.Type() != bsontype.DateTime {
 		return fmt.Errorf("cannot decode %v into a time.Time", vr.Type())
 	}
